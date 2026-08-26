@@ -1,0 +1,408 @@
+{
+  "generatedBy": "export_openers.py",
+  "minUniqueLetters": 19,
+  "requiredLetters": "aeiouy",
+  "answerPoolSize": 2315,
+  "sets": [
+    {
+      "words": [
+        "pride",
+        "foamy",
+        "blunt",
+        "shack"
+      ],
+      "score": 14.537,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        129.4,
+        12.2,
+        1.9,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "pride",
+        "foamy",
+        "shunt",
+        "black"
+      ],
+      "score": 14.537,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        129.4,
+        12.2,
+        2.0,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "bride",
+        "foamy",
+        "plant",
+        "shuck"
+      ],
+      "score": 14.537,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        141.6,
+        13.4,
+        2.2,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "slate",
+        "phony",
+        "brick",
+        "fudge"
+      ],
+      "score": 14.651,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        71.6,
+        7.8,
+        1.8,
+        1.2
+      ]
+    },
+    {
+      "words": [
+        "crate",
+        "pudgy",
+        "blink",
+        "shove"
+      ],
+      "score": 14.522,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        72.9,
+        10.6,
+        2.1,
+        1.2
+      ]
+    },
+    {
+      "words": [
+        "crane",
+        "dumpy",
+        "shift",
+        "bloke"
+      ],
+      "score": 14.502,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        78.7,
+        11.5,
+        1.8,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "crane",
+        "pudgy",
+        "shift",
+        "bloke"
+      ],
+      "score": 14.653,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        78.7,
+        11.9,
+        1.8,
+        1.2
+      ]
+    },
+    {
+      "words": [
+        "grate",
+        "dumpy",
+        "block",
+        "shine"
+      ],
+      "score": 14.489,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        84.6,
+        13.2,
+        2.2,
+        1.2
+      ]
+    },
+    {
+      "words": [
+        "share",
+        "pudgy",
+        "blink",
+        "comet"
+      ],
+      "score": 14.47,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        85.5,
+        12.6,
+        2.2,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "plate",
+        "briny",
+        "shock",
+        "fudge"
+      ],
+      "score": 14.651,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        89.3,
+        7.0,
+        1.8,
+        1.2
+      ]
+    },
+    {
+      "words": [
+        "plate",
+        "shiny",
+        "frock",
+        "budge"
+      ],
+      "score": 14.651,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        89.3,
+        7.9,
+        1.9,
+        1.2
+      ]
+    },
+    {
+      "words": [
+        "shale",
+        "comfy",
+        "print",
+        "budge"
+      ],
+      "score": 14.703,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        91.0,
+        12.8,
+        1.7,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "shale",
+        "pudgy",
+        "brink",
+        "comet"
+      ],
+      "score": 14.634,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        91.0,
+        13.6,
+        2.2,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "shale",
+        "pudgy",
+        "brink",
+        "covet"
+      ],
+      "score": 14.537,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        91.0,
+        13.6,
+        2.2,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "crone",
+        "bawdy",
+        "shift",
+        "plume"
+      ],
+      "score": 14.504,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        94.0,
+        12.2,
+        1.9,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "crone",
+        "pudgy",
+        "shift",
+        "blame"
+      ],
+      "score": 14.727,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        94.0,
+        14.8,
+        2.0,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "crone",
+        "pudgy",
+        "shift",
+        "blaze"
+      ],
+      "score": 14.504,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        94.0,
+        14.8,
+        2.0,
+        1.2
+      ]
+    },
+    {
+      "words": [
+        "plane",
+        "comfy",
+        "shirt",
+        "budge"
+      ],
+      "score": 14.539,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        95.2,
+        12.6,
+        1.7,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "slice",
+        "pudgy",
+        "month",
+        "brake"
+      ],
+      "score": 14.472,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        96.1,
+        14.0,
+        2.0,
+        1.2
+      ]
+    },
+    {
+      "words": [
+        "shire",
+        "comfy",
+        "plant",
+        "budge"
+      ],
+      "score": 14.539,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        96.5,
+        13.3,
+        1.7,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "shire",
+        "pudgy",
+        "blank",
+        "comet"
+      ],
+      "score": 14.47,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        96.5,
+        14.8,
+        2.2,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "trope",
+        "shiny",
+        "black",
+        "fudge"
+      ],
+      "score": 14.473,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        97.3,
+        8.3,
+        1.8,
+        1.2
+      ]
+    },
+    {
+      "words": [
+        "trope",
+        "shiny",
+        "flack",
+        "budge"
+      ],
+      "score": 14.473,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        97.3,
+        8.3,
+        1.9,
+        1.2
+      ]
+    },
+    {
+      "words": [
+        "grace",
+        "downy",
+        "shift",
+        "plume"
+      ],
+      "score": 14.465,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        100.7,
+        12.2,
+        1.9,
+        1.1
+      ]
+    },
+    {
+      "words": [
+        "grace",
+        "dumpy",
+        "flint",
+        "shove"
+      ],
+      "score": 14.464,
+      "distinctLetters": 19,
+      "expectedRemaining": [
+        100.7,
+        15.1,
+        1.9,
+        1.1
+      ]
+    }
+  ]
+}

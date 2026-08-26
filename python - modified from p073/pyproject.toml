@@ -1,0 +1,24 @@
+[project]
+name = "nyt-games-helpers"
+version = "0.1.0"
+description = "Solvers and helpers for Wordle, Spelling Bee, and Letter Boxed."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py310"
+# Historical snapshot, kept for reference only -- not worth linting.
+exclude = ["backup"]
+
+[tool.ruff.lint]
+# Pin the rule set explicitly so results don't drift with ruff's defaults.
+select = ["E4", "E7", "E9", "F", "I"]
