@@ -169,8 +169,19 @@ updating.
       -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
   ```
 
-  Signing is unset in the project file, so a Simulator build needs no team. To put
-  it on the phone, pick your personal team under Signing & Capabilities in Xcode.
+  Signing is set up: automatic, team `TEQCSJPVNF` (the one most of Bruce's other
+  Swift projects use), bundle id `com.schechter.NYTGamesHelper`. A device build
+  works from the command line — add `-allowProvisioningUpdates` the first time on
+  a new machine so Xcode can fetch the profile:
+
+  ```bash
+  xcodebuild -project NYTGamesHelper.xcodeproj -scheme NYTGamesHelper \
+      -sdk iphoneos -destination 'generic/platform=iOS' \
+      -allowProvisioningUpdates build
+  ```
+
+  To install on the phone, open the project in Xcode, plug the phone in and pick
+  it as the run destination. The signing certificate expires July 2027.
 - **Regenerate `openers.json`** with `uv run export_openers.py` in the Python
   project whenever the Wordle answer list or the search settings change. It writes
   straight into `iOS app/NYTGamesHelper/Resources/` and takes about 45 seconds.
