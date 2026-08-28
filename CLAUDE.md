@@ -110,12 +110,32 @@ is bundled automatically — there's nothing to add to the project file.
 
 ### How the user describes a puzzle
 
-Each screen takes one typed line. The `?` button on each screen shows the same
-text as the parser's `syntaxHelp`.
+**Wordle uses a tappable board**, not typed text. A row is built in two steps,
+which is what `WordleModel.Phase` tracks:
+
+1. **Typing** — five blank outlined tiles. A 1×1 invisible `TextField` behind the
+   tiles is what the keyboard is actually attached to; the tiles just render what
+   it holds. That field must stay `.textInputAutocapitalization(.never)` — letting
+   it upper-case the text makes every keystroke round-trip through the binding as
+   the model lower-cases it back, and characters get dropped when typing at speed.
+2. **Colorizing** — after **Colorize**, tapping a tile cycles it white → yellow →
+   green → white, so a wrong pick is corrected by carrying on round rather than
+   starting the row over. **Accept** locks the row into the `WordleBoard` and
+   starts a fresh one; **Edit letters** goes back to step 1, keeping the colours
+   unless the letters actually change.
+
+The board stops after six rows, or as soon as a row comes back all green. `Undo
+last row` pulls the last locked row back into the draft. The board is pinned and
+only the suggestions scroll, so the tiles and buttons stay reachable.
+
+`WordleInputParser` is no longer on screen but is kept — the tests use it, and it
+is still the worked example of what a `PuzzleInputSource` looks like.
+
+The other two games still take one typed line; the `?` button on each shows the
+same text as that parser's `syntaxHelp`.
 
 | Game | Typed as | Meaning |
 | --- | --- | --- |
-| Wordle | `crane .g..y` | the guess, then one mark per letter: `g` right spot, `y` wrong spot, `.` not in the word. `+`/`?`/`x`/`-`/`_` are accepted too. |
 | Spelling Bee | `n acdehl` | center letter first, then the outer six. `nacdehl` works too. |
 | Letter Boxed | `abc def ghi jkl` | the four sides, three letters each. |
 
@@ -191,7 +211,8 @@ updating.
   and it's much cheaper than reasoning about correctness from scratch. Note that
   Letter Boxed can have ties, so assert the shape of the answer (word count, total
   letters) rather than the exact words.
-- Driving the Simulator UI from a script needs accessibility permission and isn't
-  set up; cover view-model behaviour with the `@MainActor` tests in
-  `ModelTests.swift` instead, which is where the parse → solve → results wiring
-  actually lives.
+- Driving the Simulator UI from a script only half works: `osascript` **keystroke**
+  reaches the app fine, but System Events **click at** hangs (it needs a permission
+  that isn't granted). So a board can be typed into from a script but not tapped.
+  Cover behaviour with the `@MainActor` tests in `ModelTests.swift` instead — that
+  is where the type → colorize → accept flow lives, independent of the views.

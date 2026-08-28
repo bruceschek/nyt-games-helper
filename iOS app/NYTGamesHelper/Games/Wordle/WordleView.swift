@@ -1,137 +1,187 @@
 import SwiftUI
 
-@Observable
-final class WordleModel {
-    var board = WordleBoard()
-    var entry = ""
-    var error: PuzzleInputError?
-    var suggestions: [WordleSuggestion] = []
-
-    private let parser = WordleInputParser()
-
-    func submit() {
-        switch parser.parse(entry) {
-        case .failure(let problem):
-            error = problem
-        case .success(let guess):
-            error = nil
-            entry = ""
-            board.guesses.append(guess)
-            refresh()
-        }
-    }
-
-    func remove(_ guess: Guess) {
-        board.guesses.removeAll { $0 == guess }
-        refresh()
-    }
-
-    func startOver() {
-        board = WordleBoard()
-        entry = ""
-        error = nil
-        suggestions = []
-    }
-
-    private func refresh() {
-        suggestions = WordleSolver.suggestions(for: board)
-    }
-}
-
+/// The Wordle board.
+///
+/// The board is pinned at the top and only the suggestions scroll, so the tiles and
+/// the buttons stay reachable however many guesses are in.
 struct WordleView: View {
     @State private var model = WordleModel()
+    @FocusState private var keyboardFocused: Bool
 
     var body: some View {
-        VStack(spacing: 12) {
-            PuzzleEntryField(
-                placeholder: WordleInputParser.placeholder,
-                help: WordleInputParser.syntaxHelp,
-                text: $model.entry,
-                error: model.error,
-                onSubmit: model.submit
-            )
-
-            if model.board.guesses.isEmpty {
-                Spacer()
-                EmptyStateView(
-                    symbol: "square.grid.3x3",
-                    message: "Type a guess and how Wordle marked it, and I'll show what the answer can still be."
-                )
-                Spacer()
-            } else {
-                List {
-                    Section("Your guesses") {
-                        ForEach(model.board.guesses) { guess in
-                            GuessRow(guess: guess)
-                                .swipeActions {
-                                    Button("Remove", role: .destructive) { model.remove(guess) }
-                                }
-                        }
-                    }
-
-                    Section(suggestionsHeader) {
-                        if model.suggestions.isEmpty {
-                            Text("No word fits all of that — check the marks above for a slip.")
-                                .foregroundStyle(.secondary)
-                        }
-                        ForEach(model.suggestions.prefix(50)) { suggestion in
-                            HStack {
-                                Text(suggestion.word).font(.body.monospaced())
-                                Spacer()
-                                Text(suggestion.commonnessRank == nil ? "uncommon" : "#\(suggestion.commonnessRank!)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                }
-                .listStyle(.insetGrouped)
-            }
+        VStack(spacing: 0) {
+            board
+            Divider()
+            suggestions
         }
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
+            ToolbarItemGroup(placement: .topBarLeading) {
                 Button("Start over", action: model.startOver)
-                    .disabled(model.board.guesses.isEmpty)
+                    .disabled(model.board.guesses.isEmpty && model.draftText.isEmpty)
+                Button { model.undoLastRow() } label: {
+                    Label("Undo last row", systemImage: "arrow.uturn.backward")
+                }
+                .disabled(model.board.guesses.isEmpty)
             }
         }
+        .onAppear { keyboardFocused = model.isAcceptingGuesses }
     }
 
-    private var suggestionsHeader: String {
-        let count = model.suggestions.count
-        switch count {
-        case 0:  return "Still possible"
-        case 1:  return "That's the answer"
-        default: return "Still possible — \(count) words, most common first"
+    // MARK: - Board
+
+    private var board: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                // Invisible, but it's what the keyboard is actually attached to —
+                // the tiles above are just a rendering of what it holds.
+                TextField("", text: $model.draftText)
+                    .focused($keyboardFocused)
+                    // Never capitalise: the field is invisible, and letting it
+                    // upper-case the text would make every keystroke round-trip
+                    // through the binding as the model lower-cased it back, which
+                    // drops characters when typing quickly. The tiles do the
+                    // upper-casing for display.
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .keyboardType(.asciiCapable)
+                    .submitLabel(.done)
+                    .onSubmit { model.beginColorizing() }
+                    .frame(width: 1, height: 1)
+                    .opacity(0.01)
+                    .allowsHitTesting(false)
+
+                VStack(spacing: 6) {
+                    ForEach(model.board.guesses) { guess in
+                        LockedRow(guess: guess)
+                    }
+                    if model.isAcceptingGuesses {
+                        draftRow
+                    }
+                    ForEach(0..<remainingRows, id: \.self) { _ in
+                        PlaceholderRow()
+                    }
+                }
+            }
+            .padding(.top, 8)
+
+            controls
         }
+        .padding(.bottom, 12)
     }
-}
 
-/// One played guess, coloured the way the game colours it.
-struct GuessRow: View {
-    let guess: Guess
-
-    var body: some View {
+    private var draftRow: some View {
         HStack(spacing: 6) {
-            ForEach(Array(guess.letters.enumerated()), id: \.offset) { index, letter in
-                Text(String(letter).uppercased())
-                    .font(.headline.monospaced())
-                    .frame(width: 34, height: 34)
-                    .background(background(for: guess.marks[index]), in: .rect(cornerRadius: 6))
-                    .foregroundStyle(foreground(for: guess.marks[index]))
+            ForEach(0..<WordleBoard.length, id: \.self) { index in
+                WordleTile(
+                    letter: model.draftLetters[index],
+                    mark: model.phase == .colorizing ? model.draftMarks[index] : .notInWord,
+                    isActive: true
+                )
+                .onTapGesture {
+                    if model.phase == .colorizing {
+                        model.cycleMark(at: index)
+                    } else {
+                        keyboardFocused = true
+                    }
+                }
             }
         }
-        .padding(.vertical, 2)
     }
 
-    private func foreground(for mark: LetterMark) -> Color {
-        mark == .notInWord ? .primary : .white
+    /// Rows still to come, so the board doesn't jump about as guesses are added.
+    private var remainingRows: Int {
+        let used = model.board.guesses.count + (model.isAcceptingGuesses ? 1 : 0)
+        return max(0, WordleModel.maxGuesses - used)
     }
 
-    private func background(for mark: LetterMark) -> Color {
-        switch mark {
-        case .rightSpot: .green
-        case .wrongSpot: .yellow
-        case .notInWord: Color.secondary.opacity(0.2)
+    // MARK: - Buttons
+
+    @ViewBuilder
+    private var controls: some View {
+        VStack(spacing: 6) {
+            switch model.status {
+            case .solved:
+                Label("That's it — you've got it.", systemImage: "checkmark.circle.fill")
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(.green)
+            case .outOfGuesses:
+                Label("That's all six guesses.", systemImage: "flag.checkered")
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(.secondary)
+            case .playing:
+                HStack(spacing: 12) {
+                    if model.phase == .typing {
+                        Button("Colorize") {
+                            keyboardFocused = false
+                            model.beginColorizing()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(!model.hasFullDraft)
+                    } else {
+                        Button("Edit letters") {
+                            model.editLetters()
+                            keyboardFocused = true
+                        }
+                        .buttonStyle(.bordered)
+
+                        Button("Accept") {
+                            model.accept()
+                            keyboardFocused = model.isAcceptingGuesses
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
+
+                Text(hint)
+                    .font(.caption)
+                    .foregroundStyle(model.problem == nil ? Color.secondary : Color.orange)
+                    .multilineTextAlignment(.center)
+                    .frame(height: 32)
+                    .padding(.horizontal)
+            }
+        }
+    }
+
+    private var hint: String {
+        if let problem = model.problem { return problem.message }
+        switch model.phase {
+        case .typing:
+            return model.hasFullDraft
+                ? "Now say how Wordle marked it."
+                : "Type your guess."
+        case .colorizing:
+            return "Tap a letter to cycle it: white → yellow → green."
+        }
+    }
+
+    // MARK: - Suggestions
+
+    private var suggestions: some View {
+        List {
+            Section(header) {
+                if model.suggestions.isEmpty {
+                    Text("No word fits all of that — check the colours above for a slip.")
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(model.suggestions.prefix(200)) { suggestion in
+                    HStack {
+                        Text(suggestion.word).font(.body.monospaced())
+                        Spacer()
+                        Text(suggestion.commonnessRank.map { "#\($0)" } ?? "uncommon")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .listStyle(.plain)
+    }
+
+    private var header: String {
+        switch model.suggestions.count {
+        case 0:  "Still possible"
+        case 1:  "That's the answer"
+        default: "Still possible — \(model.suggestions.count) words, most common first"
         }
     }
 }
