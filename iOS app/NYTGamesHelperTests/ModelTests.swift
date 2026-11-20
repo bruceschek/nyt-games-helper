@@ -168,6 +168,40 @@ struct GameModelTests {
         #expect(model.puzzle?.centerLetter == "n")
     }
 
+    @Test("each new picture of a Wordle game replaces the board")
+    func wordleFromPictures() {
+        let model = WordleModel()
+        model.draftText = "sla"   // half-typed by hand; a picture supersedes it
+
+        func screen(_ rows: [(String, [LetterMark])]) -> WordleScreen {
+            let colors: [LetterMark: Int] = [.rightSpot: 0x6AAA64, .wrongSpot: 0xC9B458, .notInWord: 0x787C7E]
+            // Tiles 200 apart from (200, 400); a letter in the middle of each.
+            var glyphs: [RecognizedGlyph] = []
+            for (r, row) in rows.enumerated() {
+                for (c, letter) in row.0.enumerated() {
+                    glyphs.append(RecognizedGlyph(letter: letter, frame: CGRect(
+                        x: 200 + CGFloat(c) * 200 - 30, y: 400 + CGFloat(r) * 200 - 38, width: 60, height: 76)))
+                }
+            }
+            return WordleScreen(glyphs: glyphs) { rect in
+                let row = Int(((rect.midY - 400) / 200).rounded()), column = Int(((rect.midX - 200) / 200).rounded())
+                guard rows.indices.contains(row), (0..<5).contains(column) else { return RGBColor(hex: 0xFFFFFF) }
+                return RGBColor(hex: colors[rows[row].1[column]]!)
+            }
+        }
+
+        let first: [(String, [LetterMark])] = [("crane", [.notInWord, .rightSpot, .notInWord, .notInWord, .wrongSpot])]
+        model.read(screen(first))
+        #expect(model.board.guesses.map(\.word) == ["crane"])
+        #expect(model.draftText.isEmpty)
+        let afterOne = model.suggestions.count
+
+        model.read(screen(first + [("brute", [.notInWord, .rightSpot, .wrongSpot, .notInWord, .rightSpot])]))
+        #expect(model.board.guesses.map(\.word) == ["crane", "brute"])
+        #expect(model.suggestions.count < afterOne)
+        #expect(model.problem == nil)
+    }
+
     @Test("a hive read from a picture fills the entry and solves")
     func spellingBeeFromPicture() async throws {
         let model = SpellingBeeModel()

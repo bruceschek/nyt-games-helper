@@ -72,6 +72,7 @@ struct SpellingBeeView: View {
                 text: $model.entry,
                 error: model.error,
                 onPhoto: model.read,
+                onPhotoProblem: { model.error = $0 },
                 isReadingPhoto: model.isReadingPhoto,
                 onSubmit: model.submit
             )

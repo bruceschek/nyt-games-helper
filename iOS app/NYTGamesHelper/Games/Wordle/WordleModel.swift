@@ -50,6 +50,9 @@ final class WordleModel {
     private(set) var draftMarks = WordleModel.blankMarks
     private(set) var phase = Phase.typing
     private(set) var problem: PuzzleInputError?
+    private(set) var isReadingPhoto = false
+
+    private let imageReader = WordleImageReader()
 
     private static var blankMarks: [LetterMark] {
         Array(repeating: .notInWord, count: WordleBoard.length)
@@ -125,6 +128,50 @@ final class WordleModel {
         draftMarks = last.marks
         phase = .colorizing
         problem = nil
+        refresh()
+    }
+
+    // MARK: - From a picture
+
+    /// Reads every row played so far from a picture of the game and puts the board
+    /// in their place. Meant to be repeated after each guess: each new picture
+    /// replaces the board rather than adding to it, so one taken too early, or
+    /// misread, is put right by the next.
+    func read(_ photo: PuzzlePhoto) {
+        isReadingPhoto = true
+        Task {
+            defer { isReadingPhoto = false }
+            do {
+                show(try await imageReader.read(photo))
+            } catch {
+                problem = PuzzleInputError("Something went wrong reading that picture. Try again.")
+            }
+        }
+    }
+
+    /// The same as `read(_:)` for a screen already pulled apart — what tests drive.
+    func read(_ screen: WordleScreen) {
+        show(imageReader.parse(screen))
+    }
+
+    /// For a problem found before there was a picture to read, such as no access to Photos.
+    func report(_ problem: PuzzleInputError) {
+        self.problem = problem
+    }
+
+    private func show(_ result: Result<WordleBoard, PuzzleInputError>) {
+        switch result {
+        case .success(let read):
+            replaceBoard(with: read)
+        case .failure(let reason):
+            problem = reason
+        }
+    }
+
+    /// Swaps the whole board for `newBoard`, dropping any row half-built by hand.
+    func replaceBoard(with newBoard: WordleBoard) {
+        board = newBoard
+        resetDraft()
         refresh()
     }
 

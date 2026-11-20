@@ -26,7 +26,9 @@ struct WordleView: View {
                 }
             } else {
                 VStack(spacing: 0) {
-                    fittedBoard
+                    // First call on the height, so the board takes its full size
+                    // whenever it fits and the suggestions get what's left.
+                    fittedBoard.layoutPriority(1)
                     Divider()
                     suggestions
                 }
@@ -141,6 +143,18 @@ struct WordleView: View {
                     .foregroundStyle(.secondary)
             case .playing:
                 HStack(spacing: 12) {
+                    PhotoSourceButton(
+                        isReading: model.isReadingPhoto,
+                        onPhoto: { photo in
+                            keyboardFocused = false
+                            model.read(photo)
+                        },
+                        onProblem: model.report
+                    ) {
+                        Label("Read board", systemImage: "camera.viewfinder")
+                    }
+                    .buttonStyle(.bordered)
+
                     if model.phase == .typing {
                         Button("Colorize") {
                             keyboardFocused = false
@@ -179,7 +193,7 @@ struct WordleView: View {
         case .typing:
             return model.hasFullDraft
                 ? "Now say how Wordle marked it."
-                : "Type your guess."
+                : "Type your guess — or read the whole board from a screenshot."
         case .colorizing:
             return "Tap a letter to cycle it: white → yellow → green."
         }

@@ -162,9 +162,30 @@ fits a stretch-and-skew transform so tilted photos work), `SpellingBeeImageReade
   to hexagons by order, not by position.
 
 Tested with hand-placed letters (`ImageReaderTests.swift`) plus a drawn hive run
-through real Vision; not yet tried on a real NYT screenshot. Letter Boxed and
-Wordle have no photo path yet — Wordle's needs tile colours, which Vision doesn't
-give.
+through real Vision; not yet tried on a real NYT screenshot.
+
+**Wordle reads the whole board from a picture**, via the **Read board** button
+(Latest Screenshot / Choose from Photos / Take a Photo — `PhotoSourceButton`,
+shared with Spelling Bee). Each picture *replaces* the board, so the flow is one
+picture after each play. `WordleGrid` places the 5×6 grid from whatever letters
+Vision found (tile step = the gap most other gaps are multiples of; the largest
+group of letters agreeing on it is the board, which drops the title and keyboard;
+tile colours settle edges letters can't). Tile colours come from pixels
+(`ImagePixels`, sampled above each letter); green/yellow/grey plus high-contrast
+orange/blue; a white or near-black tile is unplayed and ends the board. Then each
+played row's tiles are cut out and reread as a word. More Vision traps:
+
+- Wordle's tiles are too far apart to read as words: Vision reports **lone
+  letters and skips many** (I, O, white-on-colour letters, half of dark mode).
+- Cut-outs must be **narrow** (about a letter wide) or the row stops reading as
+  a word, and **cleaned to black on white** (`TextRecognizer.row`) — that also
+  fixed a flaky Spelling Bee case.
+- The `.accurate` reader read `IDIOM` **upside down** as `WOIGI` at confidence
+  1.0, orientation pinned or not; `.fast` got it. So rows are reread accurate,
+  then fast, keeping the first legal word.
+- A capital I read as `l` is retried as `i` against the word list.
+
+Letter Boxed has no photo path yet.
 
 ### Porting notes per game
 
