@@ -10,14 +10,16 @@ struct WordleTile: View {
     /// Draws the outline heavier, to show which row is being worked on.
     var isActive = false
 
+    @Environment(\.wordleTileSize) private var size
+
     var body: some View {
         Text(letter.map { String($0).uppercased() } ?? " ")
-            .font(.system(size: 28, weight: .bold, design: .rounded))
+            .font(.system(size: size * 0.54, weight: .bold, design: .rounded))
             .foregroundStyle(mark == .notInWord ? Color.primary : .white)
-            .frame(width: 52, height: 52)
-            .background(fill, in: .rect(cornerRadius: 8))
+            .frame(width: size, height: size)
+            .background(fill, in: .rect(cornerRadius: size * 0.15))
             .overlay {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: size * 0.15)
                     .strokeBorder(border, lineWidth: isActive ? 2 : 1)
             }
     }
@@ -33,6 +35,13 @@ struct WordleTile: View {
     private var border: Color {
         mark == .notInWord ? Color.secondary.opacity(isActive ? 0.7 : 0.35) : .clear
     }
+}
+
+extension EnvironmentValues {
+    /// The side of one tile. The board picks the largest size that fits the space
+    /// it has — the Duo's outer screen with the keyboard up is far shorter than
+    /// its inner one.
+    @Entry var wordleTileSize: CGFloat = 52
 }
 
 /// A row that's already been locked in.

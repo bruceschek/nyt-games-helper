@@ -2,18 +2,40 @@ import SwiftUI
 
 /// The Wordle board.
 ///
-/// The board is pinned at the top and only the suggestions scroll, so the tiles and
-/// the buttons stay reachable however many guesses are in.
+/// The board is pinned and only the suggestions scroll, so the tiles and the
+/// buttons stay reachable however many guesses are in.
+///
+/// Where there's width to spare — iPhone Duo unfolded, either way up — the board
+/// and the suggestions sit side by side; otherwise the board goes on top. Either
+/// way the tiles shrink to fit a short screen, such as the Duo's outer display
+/// with the keyboard up.
 struct WordleView: View {
     @State private var model = WordleModel()
     @FocusState private var keyboardFocused: Bool
+    @Environment(\.horizontalSizeClass) private var widthClass
 
     var body: some View {
-        VStack(spacing: 0) {
-            board
-            Divider()
-            suggestions
+        Group {
+            if widthClass == .regular {
+                HStack(spacing: 0) {
+                    fittedBoard
+                        .frame(maxHeight: .infinity, alignment: .top)
+                        .frame(width: 400)
+                    Divider()
+                    suggestions
+                }
+            } else {
+                VStack(spacing: 0) {
+                    fittedBoard
+                    Divider()
+                    suggestions
+                }
+            }
         }
+        // One field for the keyboard, outside the board: the board is built at
+        // several sizes to find one that fits, and a field inside it would be
+        // swapped for another — dropping the keyboard — whenever the size changed.
+        .background(alignment: .topLeading) { hiddenField }
         .toolbar {
             ToolbarItemGroup(placement: .topBarLeading) {
                 Button("Start over", action: model.startOver)
@@ -29,37 +51,26 @@ struct WordleView: View {
 
     // MARK: - Board
 
+    /// The board at the largest tile size that fits the height available.
+    private var fittedBoard: some View {
+        ViewThatFits(in: .vertical) {
+            ForEach([52.0, 44, 36, 30], id: \.self) { size in
+                board.environment(\.wordleTileSize, size)
+            }
+        }
+    }
+
     private var board: some View {
         VStack(spacing: 12) {
-            ZStack {
-                // Invisible, but it's what the keyboard is actually attached to —
-                // the tiles above are just a rendering of what it holds.
-                TextField("", text: $model.draftText)
-                    .focused($keyboardFocused)
-                    // Never capitalise: the field is invisible, and letting it
-                    // upper-case the text would make every keystroke round-trip
-                    // through the binding as the model lower-cased it back, which
-                    // drops characters when typing quickly. The tiles do the
-                    // upper-casing for display.
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .keyboardType(.asciiCapable)
-                    .submitLabel(.done)
-                    .onSubmit { model.beginColorizing() }
-                    .frame(width: 1, height: 1)
-                    .opacity(0.01)
-                    .allowsHitTesting(false)
-
-                VStack(spacing: 6) {
-                    ForEach(model.board.guesses) { guess in
-                        LockedRow(guess: guess)
-                    }
-                    if model.isAcceptingGuesses {
-                        draftRow
-                    }
-                    ForEach(0..<remainingRows, id: \.self) { _ in
-                        PlaceholderRow()
-                    }
+            VStack(spacing: 6) {
+                ForEach(model.board.guesses) { guess in
+                    LockedRow(guess: guess)
+                }
+                if model.isAcceptingGuesses {
+                    draftRow
+                }
+                ForEach(0..<remainingRows, id: \.self) { _ in
+                    PlaceholderRow()
                 }
             }
             .padding(.top, 8)
@@ -67,6 +78,26 @@ struct WordleView: View {
             controls
         }
         .padding(.bottom, 12)
+    }
+
+    private var hiddenField: some View {
+        // Invisible, but it's what the keyboard is actually attached to —
+        // the tiles above are just a rendering of what it holds.
+        TextField("", text: $model.draftText)
+            .focused($keyboardFocused)
+            // Never capitalise: the field is invisible, and letting it
+            // upper-case the text would make every keystroke round-trip
+            // through the binding as the model lower-cased it back, which
+            // drops characters when typing quickly. The tiles do the
+            // upper-casing for display.
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .keyboardType(.asciiCapable)
+            .submitLabel(.done)
+            .onSubmit { model.beginColorizing() }
+            .frame(width: 1, height: 1)
+            .opacity(0.01)
+            .allowsHitTesting(false)
     }
 
     private var draftRow: some View {

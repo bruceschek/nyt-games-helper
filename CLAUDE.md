@@ -126,6 +126,12 @@ which is what `WordleModel.Phase` tracks:
    starts a fresh one; **Edit letters** goes back to step 1, keeping the colours
    unless the letters actually change.
 
+With regular width (Duo unfolded) the board sits left of the suggestions;
+otherwise above them. Either way `ViewThatFits` picks the largest tile size
+(52/44/36/30) whose board fits the height. The hidden keyboard field therefore
+lives *outside* the board — inside, it would be rebuilt whenever the size
+changed, dropping the keyboard, which shrinks the board again, and so on.
+
 The board stops after six rows, or as soon as a row comes back all green. `Undo
 last row` pulls the last locked row back into the draft. The board is pinned and
 only the suggestions scroll, so the tiles and buttons stay reachable.
@@ -200,7 +206,13 @@ updating.
 
 - The Python project uses `uv`: `uv run main.py`, `uv run ruff check`. There is
   no test suite — `test/` holds exploratory scripts.
-- The iOS project builds with Xcode 26.6 / Swift 6.3, Swift 5 language mode.
+- The iOS project builds with Xcode 27.1 (iOS 27.1 SDK), Swift 5 language mode;
+  the deployment target stays iOS 26. Building with the 27.1 SDK is what lets the
+  app fill the **iPhone Duo**'s unfolded screen — an older SDK runs it at a fixed
+  size with bars down the sides. The Duo has an iPhone-sized outer display (5.4")
+  and a near-square inner one (7.6", regular width), and the system may resize the
+  window at any time, so layouts go by size class and available space, never by
+  device or orientation. Run the tests on `name=iPhone Duo` as well as the 17 Pro.
 
   ```bash
   cd "iOS app"
