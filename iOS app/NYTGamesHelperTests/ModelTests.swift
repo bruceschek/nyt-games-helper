@@ -1,3 +1,4 @@
+import CoreGraphics
 import Testing
 @testable import NYTGamesHelper
 
@@ -165,6 +166,24 @@ struct GameModelTests {
         try await waitUntil { !model.isWorking && model.results != nil }
         #expect(model.results?.finds.count == 126)
         #expect(model.puzzle?.centerLetter == "n")
+    }
+
+    @Test("a hive read from a picture fills the entry and solves")
+    func spellingBeeFromPicture() async throws {
+        let model = SpellingBeeModel()
+        // Center plus six around it, as the reader would get them from Vision.
+        let center = CGPoint(x: 500, y: 1000)
+        var glyphs = [RecognizedGlyph(letter: "n", frame: CGRect(x: center.x, y: center.y, width: 40, height: 60))]
+        for (index, letter) in "acdehl".enumerated() {
+            let theta = Double(index) * .pi / 3
+            glyphs.append(RecognizedGlyph(letter: letter, frame: CGRect(
+                x: center.x + 150 * sin(theta), y: center.y - 150 * cos(theta), width: 40, height: 60)))
+        }
+        model.read(glyphs)
+
+        #expect(model.entry == "n acdehl")
+        try await waitUntil { !model.isWorking && model.results != nil }
+        #expect(model.results?.finds.count == 126)
     }
 
     @Test("Letter Boxed finds a chain and reports back")

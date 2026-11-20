@@ -7,8 +7,40 @@ final class SpellingBeeModel {
     var puzzle: SpellingBeePuzzle?
     var results: SpellingBeeResults?
     var isWorking = false
+    var isReadingPhoto = false
 
     private let parser = SpellingBeeInputParser()
+    private let imageReader = SpellingBeeImageReader()
+
+    /// Reads the hive from a picture, writes what it found into the entry field —
+    /// so a misread letter can be fixed by typing — and solves it.
+    func read(_ photo: PuzzlePhoto) {
+        isReadingPhoto = true
+        Task {
+            defer { isReadingPhoto = false }
+            do {
+                show(try await imageReader.read(photo))
+            } catch {
+                self.error = PuzzleInputError("Something went wrong reading that picture. Try again, or type the letters in.")
+            }
+        }
+    }
+
+    /// The same as `read(_:)` for letters already pulled from a picture — what
+    /// the tests drive.
+    func read(_ glyphs: [RecognizedGlyph]) {
+        show(imageReader.parse(glyphs))
+    }
+
+    private func show(_ result: Result<SpellingBeePuzzle, PuzzleInputError>) {
+        switch result {
+        case .failure(let problem):
+            error = problem
+        case .success(let puzzle):
+            entry = "\(puzzle.centerLetter) \(String(puzzle.outerLetters))"
+            submit()
+        }
+    }
 
     func submit() {
         switch parser.parse(entry) {
@@ -39,6 +71,8 @@ struct SpellingBeeView: View {
                 help: SpellingBeeInputParser.syntaxHelp,
                 text: $model.entry,
                 error: model.error,
+                onPhoto: model.read,
+                isReadingPhoto: model.isReadingPhoto,
                 onSubmit: model.submit
             )
 
@@ -82,7 +116,7 @@ struct SpellingBeeView: View {
                 Spacer()
                 EmptyStateView(
                     symbol: "hexagon",
-                    message: "Type today's seven letters — center letter first — and I'll find every word in the hive."
+                    message: "Type today's seven letters — center letter first — or tap the camera to read them from a screenshot, and I'll find every word in the hive."
                 )
                 Spacer()
             }

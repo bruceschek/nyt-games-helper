@@ -261,6 +261,7 @@
 				DEVELOPMENT_TEAM = TEQCSJPVNF;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "NYT Games";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Photograph a puzzle on another screen so the app can read its letters.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -284,6 +285,7 @@
 				DEVELOPMENT_TEAM = TEQCSJPVNF;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "NYT Games";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Photograph a puzzle on another screen so the app can read its letters.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

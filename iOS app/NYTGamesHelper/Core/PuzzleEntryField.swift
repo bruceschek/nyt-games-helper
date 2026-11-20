@@ -1,19 +1,25 @@
+import PhotosUI
 import SwiftUI
 
 /// The shared way of describing a puzzle: a text field, a hint, and somewhere for a
 /// parse error to land.
 ///
-/// Every game screen enters its puzzle through this, which is deliberate — when the
-/// app grows a camera path, this view is where the "or take a photo" affordance goes,
-/// and the games pick it up without changing.
+/// Every game screen enters its puzzle through this. A game that can read its
+/// puzzle from a picture passes `onPhoto`, and the field grows a camera button
+/// offering a screenshot or a fresh photo; the game decides what to do with it.
 struct PuzzleEntryField: View {
     let placeholder: String
     let help: String
     @Binding var text: String
     var error: PuzzleInputError?
+    var onPhoto: ((PuzzlePhoto) -> Void)? = nil
+    var isReadingPhoto = false
     let onSubmit: () -> Void
 
     @State private var showingHelp = false
+    @State private var showingPicker = false
+    @State private var showingCamera = false
+    @State private var pickedItem: PhotosPickerItem?
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -28,6 +34,28 @@ struct PuzzleEntryField: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                     .background(.quaternary.opacity(0.5), in: .rect(cornerRadius: 10))
+
+                if onPhoto != nil {
+                    Menu {
+                        Button("Choose a Screenshot", systemImage: "photo.on.rectangle") {
+                            showingPicker = true
+                        }
+                        if CameraView.isAvailable {
+                            Button("Take a Photo", systemImage: "camera") {
+                                showingCamera = true
+                            }
+                        }
+                    } label: {
+                        if isReadingPhoto {
+                            ProgressView()
+                        } else {
+                            Image(systemName: "camera.viewfinder")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(isReadingPhoto)
+                    .accessibilityLabel("Read the puzzle from a picture")
+                }
 
                 Button("Go", action: onSubmit)
                     .buttonStyle(.borderedProminent)
@@ -50,6 +78,23 @@ struct PuzzleEntryField: View {
             }
         }
         .padding(.horizontal)
+        .photosPicker(isPresented: $showingPicker, selection: $pickedItem, matching: .images)
+        .onChange(of: pickedItem) { _, item in
+            guard let item else { return }
+            pickedItem = nil
+            Task {
+                if let data = try? await item.loadTransferable(type: Data.self),
+                   let photo = PuzzlePhoto(data: data) {
+                    onPhoto?(photo)
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $showingCamera) {
+            CameraView { image in
+                if let photo = PuzzlePhoto(image) { onPhoto?(photo) }
+            }
+            .ignoresSafeArea()
+        }
         .sheet(isPresented: $showingHelp) {
             NavigationStack {
                 ScrollView {

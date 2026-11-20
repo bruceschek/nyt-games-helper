@@ -141,6 +141,25 @@ same text as that parser's `syntaxHelp`.
 | Spelling Bee | `n acdehl` | center letter first, then the outer six. `nacdehl` works too. |
 | Letter Boxed | `abc def ghi jkl` | the four sides, three letters each. |
 
+**Spelling Bee can also be read from a picture** — the camera button on the entry
+field offers a screenshot from Photos or a camera shot of another screen. What it
+reads is written into the text field, so a misread letter is fixed by typing. The
+pieces: `TextRecognizer` (the only Vision code; image → `RecognizedGlyph`s in
+upright pixel coordinates), `HiveLayout` (pure geometry: finds the hive by shape,
+fits a stretch-and-skew transform so tilted photos work), `SpellingBeeImageReader`
+(the `PuzzleInputSource`). Two Vision traps, both found the hard way:
+
+- It silently **skips lone capitals** — `I` above all, `O` and `Y` sometimes — in
+  their hexagons. So once 3+ letters place the hive, all seven hexagons are cut out
+  and laid side by side; Vision reads that row (`TIRONSU`) perfectly.
+- Its **per-character boxes inside a word are loose**, so the reread row is mapped
+  to hexagons by order, not by position.
+
+Tested with hand-placed letters (`ImageReaderTests.swift`) plus a drawn hive run
+through real Vision; not yet tried on a real NYT screenshot. Letter Boxed and
+Wordle have no photo path yet — Wordle's needs tile colours, which Vision doesn't
+give.
+
 ### Porting notes per game
 
 Line references are into `python - modified from p073/main.py` (1,322 lines).
