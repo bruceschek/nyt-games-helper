@@ -232,6 +232,18 @@ struct WordListTests {
         #expect(WordLists.scrabble.count == 196601)
     }
 
+    @Test("every answer has a frequency, so suggestions never fall back to alphabetical")
+    func everyAnswerIsRanked() {
+        #expect(WordLists.wordFormRanks.count == 12972)
+        #expect(WordLists.wordleAnswers.allSatisfy { WordLists.wordFormRanks[$0] != nil })
+        // The web-crawl list this replaced knew none of these three.
+        for word in ["foist", "hoist", "moist"] {
+            #expect(WordLists.wordZipf[word] ?? 0 > 2)
+        }
+        // Ordinary English must outrank web vocabulary — the old list had this backwards.
+        #expect(WordLists.rank(of: "flour") < WordLists.rank(of: "login"))
+    }
+
     @Test("the precomputed openers loaded")
     func openersLoaded() throws {
         let reference = try #require(OpeningWords.reference)

@@ -207,16 +207,33 @@ def load_wordle_guesses() -> List[str]:
     return answers + allowed
 
 
+def load_word_zipf() -> Dict[str, float]:
+    """word -> Zipf frequency for every legal Wordle guess; 1 is rare, 7 is 'the'.
+
+    Word *forms*, not lemmas, so 'tried' and 'moved' are scored in their own right
+    rather than folded into their headword.  Written by export_word_frequencies.py
+    from the wordfreq package, which blends subtitles, books, news, Wikipedia and
+    web text -- so unlike the web crawl it replaces it knows all 2,315 answers and
+    doesn't rank 'login' above 'flour'.  0.00 means wordfreq had no data.
+    """
+    scores = {}
+    with open(DICT_DIR / "wordle-word-frequencies.txt") as file:
+        for line in file:
+            if line.strip():
+                word, zipf = line.split()
+                scores[word] = float(zipf)
+    return scores
+
+
 def load_word_form_ranks() -> Dict[str, int]:
     """word -> commonness rank, 1 being the most common; line number is the rank.
 
-    Unlike load_all_words_freq this counts word *forms*, so 'tried' and 'moved'
-    are ranked in their own right rather than folded into their dictionary
-    headword.  Web-crawl derived, so treat it as a rough dial and not gospel:
-    'click' ranks high and 'crane' is missing altogether.
+    The ordering of load_word_zipf(), for callers that want a position rather than
+    a score.  Covers only the 12,972 legal Wordle guesses, so a rank here means
+    'nth commonest five-letter word Wordle accepts', not nth commonest in English.
     """
-    with open(DICT_DIR / "google-10000-english.txt") as file:
-        return {line.strip(): rank for rank, line in enumerate(file, start=1) if line.strip()}
+    with open(DICT_DIR / "wordle-word-frequencies.txt") as file:
+        return {line.split()[0]: rank for rank, line in enumerate(file, start=1) if line.strip()}
 
 
 
@@ -882,23 +899,25 @@ def enumerate_starting_word_sets(
 ######  the best rather than the luckiest of a sample.
 ############################################################################################################
 
-# How far down the word-form frequency list still counts as a word the player knows.
-# Only used to widen the Wordle answer list, which is the real basis of familiarity --
-# so a low limit here doesn't strand common words, it just adds fewer non-answers.
-FAMILIAR_WORD_RANK_LIMIT = 5000
+# How common a word must be to count as one the player knows, on the Zipf scale.
+# Only used to widen the Wordle answer list, which is the real basis of familiarity,
+# so a strict limit here doesn't strand common words -- it just adds fewer non-answers.
+# 4.0 is where the band stops being plain inflections ('years', 'asked', 'works') and
+# starts filling with proper nouns and brands ('moses', 'tesla', 'kraft').
+FAMILIAR_WORD_MIN_ZIPF = 4.0
 
 
-def build_familiar_words(rank_limit: int = FAMILIAR_WORD_RANK_LIMIT) -> List[str]:
+def build_familiar_words(min_zipf: float = FAMILIAR_WORD_MIN_ZIPF) -> List[str]:
     """Words worth recommending out loud: Wordle answers plus common word forms.
 
     The answer list carries most of the weight, being curated for exactly this
     -- words an ordinary player knows.  The frequency list then adds forms that
     are perfectly familiar but never used as answers, like 'tried' and 'asked'.
-    Neither source alone suffices: the answer list omits inflections, and the
-    frequency list is a web crawl missing plain words like 'crane'.
+    Neither source alone suffices: the answer list omits inflections, and no
+    frequency list is a good enough judge of familiarity to be trusted alone.
     """
     familiar = set(load_wordle_answers())
-    familiar |= {word for word, rank in load_word_form_ranks().items() if rank <= rank_limit}
+    familiar |= {word for word, zipf in load_word_zipf().items() if zipf >= min_zipf}
     return sorted(familiar)
 
 

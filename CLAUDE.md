@@ -13,9 +13,11 @@ games (Wordle, Spelling Bee, Letter Boxed).
 | `iOS app/` | The **deliverable**: a native SwiftUI iPhone app, written from scratch, inspired by the Python version but not a transcription of it. |
 
 The Python project has its own `CLAUDE.md` documenting its internals in depth —
-read it before touching anything algorithmic. It was formerly at
-`~/dev/pycharm/p073-...`, which is now renamed `- SEE c020` and is dormant; this
-copy is the live one.
+read it before touching anything algorithmic. It began life as the standalone
+p073 project, which now sits dormant in two places:
+`~/dev/legacy/pycharm/p073-NYT games-former eastside` and
+`~/dev/projects/0059-NYT games-eastside [p073]-iOS in 0090`.
+Neither is edited; the copy in this folder is the live one.
 
 ## Standing decisions
 
@@ -29,7 +31,7 @@ These were settled on 2026-08-26 and shouldn't be re-litigated without Bruce.
 - **One git repo, rooted at this folder**, covering both subprojects. The Python
   folder's inherited `.git` (pointing at `bruceschek/nyt-games-helpers`) is
   removed; that GitHub repo remains intact as history, and the dormant p073
-  folder still holds its own clone.
+  folders still hold their own clone of it.
 - **Target: iOS 26, iPhone only**, signed with Bruce's personal Apple ID team.
   Current SwiftUI APIs are fair game — no back-deployment compromises.
 - **v1 ships all three games** plus a static best-openers reference.
@@ -147,8 +149,8 @@ Line references are into `python - modified from p073/main.py` (1,322 lines).
   per-letter minimum and maximum occurrence counts across guesses so duplicate
   letters behave correctly — that logic is the valuable part and must survive
   intact. Candidates come from the 2,315-word answer list, never the Scrabble
-  dictionary, and rank by word-form frequency (not the lemma-based CSV, which
-  scores `tried` as if it were rare).
+  dictionary, and rank by `wordle-word-frequencies.txt` — a Zipf score for every
+  legal guess, so no answer is ever unranked (see below).
 - **Spelling Bee** (`spelling_bee`, :248). Recursive trie walk for words using
   only the allowed letters and containing the center letter; 4+ letters, flag
   pangrams, NYT scoring (4 letters = 1pt, 5+ = 1pt/letter, +7 pangram).
@@ -205,6 +207,14 @@ updating.
 - **Regenerate `openers.json`** with `uv run export_openers.py` in the Python
   project whenever the Wordle answer list or the search settings change. It writes
   straight into `iOS app/NYTGamesHelper/Resources/` and takes about 45 seconds.
+- **Word frequencies are exported, not computed at runtime.** `uv run --with
+  wordfreq export_word_frequencies.py` writes `wordle-word-frequencies.txt` into
+  both `dict/` and the iOS bundle: every legal guess with a Zipf score, most common
+  first. Regenerate it if either Wordle list changes. It replaced
+  `google-10000-english.txt`, which knew only 818 of the 2,315 answers — `foist`,
+  `hoist` and `moist` among the 1,497 it missed — and ranked web words like `login`
+  above `flour`. `wordfreq` is a 54 MB package needed only to produce that file, so
+  it stays out of the project's dependencies; pass it with `--with`.
 - Unlike the Python side, the Swift solvers **have** unit tests, and new ones
   should. Where a behaviour exists in the Python version, assert against a value
   taken from it — that's how the Spelling Bee and Letter Boxed ports were checked,
