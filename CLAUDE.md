@@ -273,6 +273,19 @@ updating.
   and it's much cheaper than reasoning about correctness from scratch. Note that
   Letter Boxed can have ties, so assert the shape of the answer (word count, total
   letters) rather than the exact words.
+- **Status lives in `README.md`** (what works, what's untested, what's next).
+  Update it when that changes. The repo is public at
+  `github.com/bruceschek/nyt-games-helper`, word lists included; Bruce is fine
+  with that.
+- If test runs fail with "test runner hung before establishing connection" or
+  "SpringBoard probably crashed", the simulator *clones* that parallel testing
+  uses are wedged — the app itself is fine. Run on the device directly with
+  `-destination 'platform=iOS Simulator,id=<udid>' -parallel-testing-enabled NO`.
+- Vision behaviour is best probed with a temporary test that records what it
+  read via `Issue.record` and saves images into the scratchpad. Running ad-hoc
+  Swift scripts on the Mac was blocked by the permission check.
+- `simctl io … screenshot` of the **iPhone Duo** simulator returns a black image;
+  the 17 Pro's works.
 - Driving the Simulator UI from a script only half works: `osascript` **keystroke**
   reaches the app fine, but System Events **click at** hangs (it needs a permission
   that isn't granted). So a board can be typed into from a script but not tapped.
